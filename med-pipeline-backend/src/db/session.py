@@ -16,7 +16,8 @@ _pool: asyncpg.Pool | None = None
 async def init_db() -> None:
     global _pool
     dsn = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/medpipeline")
-    _pool = await asyncpg.create_pool(dsn=dsn, min_size=2, max_size=10)
+    ssl = "require" if "render.com" in dsn else None
+    _pool = await asyncpg.create_pool(dsn=dsn, min_size=2, max_size=10, ssl=ssl)
     logger.info("DB pool initialised")
 
     await _pool.execute("""
