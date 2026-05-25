@@ -10,8 +10,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from src.models.clinical import (
-    ClinicalEntity, ClinicalEntityType, Certainty, ContextualNote
+    ClinicalEntity, ClinicalEntityType, Certainty
 )
+from src.nlp.context import ContextualNote
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
