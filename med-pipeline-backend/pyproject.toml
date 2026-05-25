@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+testpaths     = ["src/tests"]
+asyncio_mode  = "auto"
+log_cli       = true
+log_cli_level = "DEBUG"
