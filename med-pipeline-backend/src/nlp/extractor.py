@@ -3,10 +3,11 @@ src/nlp/extractor.py
 Medical NER extraction — upgraded to scispaCy + medspaCy.
 
 Model priority (first available wins):
-  1. en_ner_bc5cdr_md      — BC5CDR: diseases + chemicals (high precision)
-  2. en_core_sci_lg        — general biomedical NER
-  3. en_core_sci_sm        — smaller biomedical fallback
-  4. en_core_web_sm        — generic fallback (CI / cold start)
+  1. en_core_web_sm        — generic fallback (CI / cold start)
+  2. en_ner_bc5cdr_md      — BC5CDR: diseases + chemicals (high precision)
+  3. en_core_sci_lg        — general biomedical NER
+  4. en_core_sci_sm        — smaller biomedical fallback
+  
 
 Install for production:
   pip install scispacy medspacy
