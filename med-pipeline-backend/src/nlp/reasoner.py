@@ -20,7 +20,7 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-CLAUDE_MODEL      = "claude-sonnet-4-20250514"
+CLAUDE_MODEL      = "claude-sonnet-4-6"
 
 
 @dataclass
