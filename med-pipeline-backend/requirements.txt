@@ -10,13 +10,7 @@ httpx>=0.27.0
 
 # ── NLP — scispaCy upgrade ────────────────────────────────────────────────────
 spacy>=3.7.0
-scispacy>=0.5.4
 
-# BC5CDR model: diseases + chemicals (best precision for clinical text)
-https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_ner_bc5cdr_md-0.5.4.tar.gz
-
-# General biomedical model (fallback)
-https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_core_sci_sm-0.5.4.tar.gz
 
 # ── FHIR validation (optional) ────────────────────────────────────────────────
 # fhir.resources>=7.1.0
