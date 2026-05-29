@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemora — Clinical Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d0f;
+    --surface: #111518;
+    --surface2: #181d21;
+    --border: #1e2428;
+    --border2: #252c32;
+    --text: #e8eaec;
+    --text2: #8a9299;
+    --text3: #4a5560;
+    --accent: #00d4aa;
+    --accent2: #00a882;
+    --critical: #ff4d6d;
+    --high: #ff8c42;
+    --moderate: #ffd166;
+    --low: #06d6a0;
+    --mono: 'DM Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 13, 15, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bg);
+    font-family: var(--mono);
+  }
+
+  .logo-name {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .logo-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    background: rgba(0, 212, 170, 0.1);
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 212, 170, 0.2);
+    letter-spacing: 0.05em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--low);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Main layout */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    color: var(--text2);
+    font-size: 0.95rem;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Input panel */
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text2);
+    margin-bottom: 0.35rem;
+    font-family: var(--mono);
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 0.55rem 0.75rem;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field select option { background: var(--surface); }
+
+  .note-area {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 0.75rem;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 0.75rem;
+  }
+
+  .note-area:focus { border-color: var(--accent); }
+  .note-area::placeholder { color: var(--text3); }
+
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .btn-run {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 0.65rem 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-run:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-run:active { transform: translateY(0); }
+  .btn-run:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-clear {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-clear:hover { border-color: var(--text2); color: var(--text); }
+
+  .quick-tests {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .quick-label {
+    font-size: 0.68rem;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  .btn-quick {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.68rem;
+    color: var(--text2);
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-quick:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Loading state */
+  .loading-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    display: none;
+  }
+
+  .loading-bar.active { display: block; }
+
+  .loading-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 1px;
+    animation: loading 1.5s ease-in-out infinite;
+  }
+
+  @keyframes loading {
+    0% { width: 0%; margin-left: 0%; }
+    50% { width: 60%; margin-left: 20%; }
+    100% { width: 0%; margin-left: 100%; }
+  }
+
+  /* Results */
+  #results { display: none; }
+  #results.visible {
+    display: block;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  /* Severity banner */
+  .severity-banner {
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid;
+  }
+
+  .severity-banner.critical { background: rgba(255,77,109,0.08); border-color: rgba(255,77,109,0.3); }
+  .severity-banner.high { background: rgba(255,140,66,0.08); border-color: rgba(255,140,66,0.3); }
+  .severity-banner.moderate { background: rgba(255,209,102,0.08); border-color: rgba(255,209,102,0.3); }
+  .severity-banner.low { background: rgba(6,214,160,0.08); border-color: rgba(6,214,160,0.3); }
+
+  .severity-left { display: flex; align-items: center; gap: 12px; }
+  .severity-icon { font-size: 1.4rem; }
+  .severity-title { font-size: 0.7rem; color: var(--text3); font-family: var(--mono); letter-spacing: 0.1em; }
+  .severity-value { font-family: var(--serif); font-size: 1.3rem; }
+  .severity-banner.critical .severity-value { color: var(--critical); }
+  .severity-banner.high .severity-value { color: var(--high); }
+  .severity-banner.moderate .severity-value { color: var(--moderate); }
+  .severity-banner.low .severity-value { color: var(--low); }
+
+  .confidence-pill {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+
+  /* Results grid */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+
+  .result-card.full { grid-column: 1 / -1; }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 3px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 2px;
+    display: block;
+  }
+
+  .summary-text {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .flag-list { list-style: none; }
+  .flag-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .flag-item:last-child { border-bottom: none; }
+  .flag-icon { color: var(--high); flex-shrink: 0; margin-top: 2px; }
+  .no-flags { color: var(--text3); font-size: 0.82rem; font-family: var(--mono); }
+
+  .diff-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+  .diff-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    background: var(--surface2);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .diff-num {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    background: rgba(0,212,170,0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* FHIR section */
+  .fhir-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .fhir-count {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: rgba(0,212,170,0.08);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(0,212,170,0.2);
+  }
+
+  .fhir-entries { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .fhir-entry {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .fhir-entry:hover { border-color: var(--border2); }
+
+  .fhir-type {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .fhir-Condition { background: rgba(255,77,109,0.1); color: var(--critical); border: 1px solid rgba(255,77,109,0.2); }
+  .fhir-MedicationStatement { background: rgba(0,212,170,0.1); color: var(--accent); border: 1px solid rgba(0,212,170,0.2); }
+  .fhir-Procedure { background: rgba(255,140,66,0.1); color: var(--high); border: 1px solid rgba(255,140,66,0.2); }
+  .fhir-Observation { background: rgba(255,209,102,0.1); color: var(--moderate); border: 1px solid rgba(255,209,102,0.2); }
+
+  .fhir-label { font-size: 0.82rem; color: var(--text); flex: 1; }
+  .fhir-code { font-family: var(--mono); font-size: 0.68rem; color: var(--text3); }
+
+  .fhir-empty { color: var(--text3); font-size: 0.82rem; font-family: var(--mono); }
+
+  /* Raw JSON */
+  .json-toggle {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .json-toggle:hover { border-color: var(--text2); color: var(--text); }
+
+  .json-block {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text2);
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .json-block.visible { display: block; }
+
+  /* Meta row */
+  .meta-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .meta-label { font-family: var(--mono); font-size: 0.6rem; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; }
+  .meta-value { font-family: var(--mono); font-size: 0.75rem; color: var(--text2); }
+
+  /* Error */
+  .error-box {
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.3);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    color: var(--critical);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    display: none;
+  }
+  .error-box.visible { display: block; }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    .results-grid { grid-template-columns: 1fr; }
+    .input-grid { grid-template-columns: 1fr; }
+    .action-row { flex-wrap: wrap; }
+    .quick-tests { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">G</div>
+    <span class="logo-name">Gemora</span>
+    <span class="logo-tag">FHIR R4</span>
+  </div>
+  <div class="header-right">
+    <div class="api-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">connecting...</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Clinical <em>Intelligence</em><br>Pipeline</h1>
+    <p>Transform unstructured clinical notes into structured FHIR R4 resources with AI-powered reasoning.</p>
+  </div>
+
+  <div class="input-panel">
+    <div class="panel-label">Clinical Note Input</div>
+    <div class="input-grid">
+      <div class="field">
+        <label>Patient ID</label>
+        <input type="text" id="patientId" value="pt-001" placeholder="pt-001">
+      </div>
+      <div class="field">
+        <label>Source System</label>
+        <select id="sourceSystem">
+          <option value="DASHBOARD">DASHBOARD</option>
+          <option value="EMR-EPIC">EMR-EPIC</option>
+          <option value="EMR-CERNER">EMR-CERNER</option>
+          <option value="PDF-SCAN">PDF-SCAN</option>
+          <option value="MANUAL">MANUAL</option>
+        </select>
+      </div>
+    </div>
+    <textarea class="note-area" id="noteInput" placeholder="Paste clinical note here...&#10;&#10;Example: Patient is a 54 year old male presenting with severe chest pain radiating to left arm. History of myocardial infarction 2 years ago. Currently on aspirin and atorvastatin. ECG ordered urgently."></textarea>
+    <div class="action-row">
+      <button class="btn-run" id="runBtn" onclick="runPipeline()">
+        <span>▶</span> Run Pipeline
+      </button>
+      <button class="btn-clear" onclick="clearAll()">Clear</button>
+      <div class="quick-tests">
+        <span class="quick-label">Quick:</span>
+        <button class="btn-quick" onclick="loadQuick('cardiac')">Cardiac</button>
+        <button class="btn-quick" onclick="loadQuick('pediatric')">Pediatric</button>
+        <button class="btn-quick" onclick="loadQuick('psych')">Psych</button>
+        <button class="btn-quick" onclick="loadQuick('routine')">Routine</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-bar" id="loadingBar">
+    <div class="loading-fill"></div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="results">
+    <div class="severity-banner" id="severityBanner">
+      <div class="severity-left">
+        <div class="severity-icon" id="severityIcon"></div>
+        <div>
+          <div class="severity-title">OVERALL SEVERITY</div>
+          <div class="severity-value" id="severityValue"></div>
+        </div>
+      </div>
+      <div class="confidence-pill" id="confidencePill"></div>
+    </div>
+
+    <div class="results-grid">
+      <div class="result-card full">
+        <div class="card-title">Clinical Summary</div>
+        <div class="summary-text" id="summaryText"></div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-title">Urgent Flags</div>
+        <ul class="flag-list" id="flagList"></ul>
+      </div>
+
+      <div class="result-card">
+        <div class="card-title">Differential Diagnoses</div>
+        <ul class="diff-list" id="diffList"></ul>
+      </div>
+
+      <div class="result-card full">
+        <div class="fhir-header">
+          <div class="card-title" style="margin:0">FHIR R4 Resources</div>
+          <div class="fhir-count" id="fhirCount">0 resources</div>
+        </div>
+        <div class="fhir-entries" id="fhirEntries"></div>
+      </div>
+    </div>
+
+    <div class="meta-row" id="metaRow"></div>
+
+    <button class="json-toggle" onclick="toggleJson()">
+      <span id="jsonToggleIcon">▶</span>
+      <span>Raw JSON Response</span>
+    </button>
+    <pre class="json-block" id="jsonBlock"></pre>
+  </div>
+</main>
+
+<script>
+  const API = 'https://gemora.onrender.com';
+
+  const QUICK_NOTES = {
+    cardiac: {
+      text: "Patient is a 54 year old male presenting with severe chest pain radiating to left arm. History of myocardial infarction 2 years ago. Currently on aspirin and atorvastatin. No fever. ECG ordered urgently.",
+      id: "pt-cardiac-01"
+    },
+    pediatric: {
+      text: "6 year old male with fever 39.2C for 3 days, sore throat, difficulty swallowing. No rash. Rapid strep test positive. Prescribed amoxicillin.",
+      id: "pt-peds-01"
+    },
+    psych: {
+      text: "32 year old female with 2 week history of low mood, insomnia, loss of appetite, and difficulty concentrating at work. Denies suicidal ideation. PHQ-9 score 14. Started on sertraline 50mg.",
+      id: "pt-psych-01"
+    },
+    routine: {
+      text: "Patient is a 28 year old female presenting for annual checkup. No complaints. Blood pressure 120/80. Taking vitamin D supplements. No allergies.",
+      id: "pt-routine-01"
+    }
+  };
+
+  // Check API health on load
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${API}/health`);
+      const d = await r.json();
+      document.getElementById('statusDot').style.background = 'var(--low)';
+      document.getElementById('statusText').textContent = 'API live';
+    } catch {
+      document.getElementById('statusDot').style.background = 'var(--critical)';
+      document.getElementById('statusText').textContent = 'API offline';
+    }
+  }
+
+  function loadQuick(type) {
+    const q = QUICK_NOTES[type];
+    document.getElementById('noteInput').value = q.text;
+    document.getElementById('patientId').value = q.id;
+  }
+
+  function clearAll() {
+    document.getElementById('noteInput').value = '';
+    document.getElementById('patientId').value = 'pt-001';
+    document.getElementById('results').classList.remove('visible');
+    document.getElementById('errorBox').classList.remove('visible');
+  }
+
+  function toggleJson() {
+    const block = document.getElementById('jsonBlock');
+    const icon = document.getElementById('jsonToggleIcon');
+    block.classList.toggle('visible');
+    icon.textContent = block.classList.contains('visible') ? '▼' : '▶';
+  }
+
+  async function runPipeline() {
+    const text = document.getElementById('noteInput').value.trim();
+    const patientId = document.getElementById('patientId').value.trim() || 'pt-001';
+    const sourceSystem = document.getElementById('sourceSystem').value;
+
+    if (!text) {
+      showError('Please enter a clinical note.');
+      return;
+    }
+
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⟳</span> Processing...';
+
+    document.getElementById('loadingBar').classList.add('active');
+    document.getElementById('results').classList.remove('visible');
+    document.getElementById('errorBox').classList.remove('visible');
+
+    try {
+      const res = await fetch(`${API}/api/v1/process`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, patient_id: patientId, source_system: sourceSystem })
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderResults(data);
+
+    } catch (err) {
+      showError(`Pipeline error: ${err.message}. The free tier may be waking up — try again in 30 seconds.`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>▶</span> Run Pipeline';
+      document.getElementById('loadingBar').classList.remove('active');
+    }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = '⚠ ' + msg;
+    box.classList.add('visible');
+  }
+
+  function renderResults(data) {
+    const r = data.reasoning;
+    const severity = r ? r.overall_severity : 'low';
+
+    // Severity banner
+    const banner = document.getElementById('severityBanner');
+    banner.className = `severity-banner ${severity}`;
+    const icons = { critical: '🚨', high: '⚠️', moderate: '⚡', low: '✅' };
+    document.getElementById('severityIcon').textContent = icons[severity] || '✅';
+    document.getElementById('severityValue').textContent = severity.toUpperCase();
+    document.getElementById('confidencePill').textContent =
+      r ? `Confidence: ${(r.confidence * 100).toFixed(0)}%` : 'No reasoning';
+
+    // Summary
+    document.getElementById('summaryText').textContent =
+      r ? r.summary : 'Clinical reasoning not available (API key not configured).';
+
+    // Urgent flags
+    const flagList = document.getElementById('flagList');
+    flagList.innerHTML = '';
+    if (r && r.urgent_flags && r.urgent_flags.length > 0) {
+      r.urgent_flags.forEach(f => {
+        const li = document.createElement('li');
+        li.className = 'flag-item';
+        li.innerHTML = `<span class="flag-icon">▲</span><span>${f}</span>`;
+        flagList.appendChild(li);
+      });
+    } else {
+      flagList.innerHTML = '<span class="no-flags">No urgent flags identified</span>';
+    }
+
+    // Differentials
+    const diffList = document.getElementById('diffList');
+    diffList.innerHTML = '';
+    if (r && r.differentials && r.differentials.length > 0) {
+      r.differentials.forEach((d, i) => {
+        const li = document.createElement('li');
+        li.className = 'diff-item';
+        li.innerHTML = `<span class="diff-num">${i + 1}</span><span>${d}</span>`;
+        diffList.appendChild(li);
+      });
+    } else {
+      diffList.innerHTML = '<span class="no-flags">No differentials generated</span>';
+    }
+
+    // FHIR entries
+    const bundle = data.fhir_bundle;
+    const entries = bundle.entry || [];
+    document.getElementById('fhirCount').textContent = `${entries.length} resource${entries.length !== 1 ? 's' : ''}`;
+    const fhirEntries = document.getElementById('fhirEntries');
+    fhirEntries.innerHTML = '';
+    if (entries.length === 0) {
+      fhirEntries.innerHTML = '<span class="fhir-empty">No FHIR resources extracted — NLP model may need clinical text with clear medical entities.</span>';
+    } else {
+      entries.forEach(entry => {
+        const res = entry.resource;
+        const type = res.resourceType;
+        const label = res.code?.text || res.medicationCodeableConcept?.text || type;
+        const code = res.code?.coding?.[0]?.code || res.medicationCodeableConcept?.coding?.[0]?.code || '';
+        const div = document.createElement('div');
+        div.className = 'fhir-entry';
+        div.innerHTML = `
+          <span class="fhir-type fhir-${type}">${type}</span>
+          <span class="fhir-label">${label}</span>
+          ${code ? `<span class="fhir-code">${code}</span>` : ''}
+        `;
+        fhirEntries.appendChild(div);
+      });
+    }
+
+    // Meta
+    document.getElementById('metaRow').innerHTML = `
+      <div class="meta-item">
+        <span class="meta-label">Request ID</span>
+        <span class="meta-value">${data.request_id.substring(0,8)}...</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Patient</span>
+        <span class="meta-value">${data.patient_id}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Entities</span>
+        <span class="meta-value">${data.entity_count}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Pipeline Confidence</span>
+        <span class="meta-value">${(data.pipeline_confidence * 100).toFixed(1)}%</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Audit ID</span>
+        <span class="meta-value">${data.audit_id.substring(0,8)}...</span>
+      </div>
+    `;
+
+    // Raw JSON
+    document.getElementById('jsonBlock').textContent = JSON.stringify(data, null, 2);
+
+    document.getElementById('results').classList.add('visible');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  checkHealth();
+</script>
+</body>
+</html>
