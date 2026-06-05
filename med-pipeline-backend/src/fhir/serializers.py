@@ -10,9 +10,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from src.models.clinical import (
-    ClinicalEntity, ClinicalEntityType, Certainty
+    ClinicalEntity, ClinicalEntityType, Certainty, ContextualNote
 )
-from src.nlp.context import ContextualNote
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -164,42 +163,29 @@ _SERIALIZER_MAP = {
     ClinicalEntityType.ALLERGY:     build_observation,   # simplification — use AllergyIntolerance in v2
 }
 
+
 def build_fhir_bundle(
     entities: list[ClinicalEntity],
     notes: list[ContextualNote | None],
     patient_id: str,
     encounter_id: str | None = None,
 ) -> dict:
+    """
+    Assemble a FHIR R4 transaction Bundle from entity list.
+    Unknown entity types are skipped with a warning.
+    """
     entries = []
 
-    # Pad the notes list so zip doesn't truncate your entities
-    from itertools import zip_longest
-    
-    for entity, note in zip_longest(entities, notes, fillvalue=None):
-        
-        # Ensure we are checking against the Enum, not a string
-        entity_type_enum = entity.entity_type
-        if isinstance(entity_type_enum, str):
-            try:
-                entity_type_enum = ClinicalEntityType(entity_type_enum.upper())
-            except ValueError:
-                pass # Will be caught by the builder check below
-
-        builder = _SERIALIZER_MAP.get(entity_type_enum)
-        
+    for entity, note in zip(entities, notes):
+        builder = _SERIALIZER_MAP.get(entity.entity_type)
         if not builder:
-            logger.warning(f"No serializer for entity type: {entity.entity_type}")
+            logger.warning("No serializer for entity type: %s", entity.entity_type)
             continue
 
-        # Safely map arguments based on the builder
         try:
-            if entity_type_enum in (ClinicalEntityType.CONDITION, ClinicalEntityType.OBSERVATION, ClinicalEntityType.ALLERGY):
-                resource = builder(entity, patient_id, note=note, encounter_id=encounter_id)
-            else:
-                resource = builder(entity, patient_id, encounter_id=encounter_id)
-        except Exception as e:
-            logger.error(f"Failed to build resource for {entity.raw_text}: {e}")
-            continue
+            resource = builder(entity, patient_id, note, encounter_id)  # type: ignore[call-arg]
+        except TypeError:
+            resource = builder(entity, patient_id)  # fallback for builders without note
 
         entries.append({
             "fullUrl":  f"urn:uuid:{resource['id']}",

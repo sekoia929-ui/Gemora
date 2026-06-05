@@ -9,6 +9,8 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+# ── Enumerations ──────────────────────────────────────────────────────────────
+
 class ClinicalEntityType(str, Enum):
     CONDITION   = "CONDITION"
     MEDICATION  = "MEDICATION"
@@ -31,46 +33,46 @@ class TerminologySystem(str, Enum):
     LOINC  = "http://loinc.org"
 
 
+# ── Core entity ───────────────────────────────────────────────────────────────
+
 class ClinicalEntity(BaseModel):
-    raw_text:    str                = Field(..., description="Original text span")
+    """A single extracted clinical concept before FHIR mapping."""
+
+    raw_text: str                = Field(..., description="Original text span")
     entity_type: ClinicalEntityType
-    certainty:   Certainty          = Certainty.CONFIRMED
-    confidence:  float              = Field(..., ge=0.0, le=1.0)
-    start_char:  Optional[int]      = None
-    end_char:    Optional[int]      = None
-    code:        Optional[str]      = None
+    certainty: Certainty         = Certainty.CONFIRMED
+    confidence: float            = Field(..., ge=0.0, le=1.0)
+    start_char: Optional[int]    = None
+    end_char: Optional[int]      = None
+
+    # populated after terminology mapping
+    code: Optional[str]          = None
     code_system: Optional[TerminologySystem] = None
-    display:     Optional[str]      = None
+    display: Optional[str]       = None
 
 
 class ExtractionResult(BaseModel):
-    source_text:           str
-    entities:              list[ClinicalEntity]
-    extraction_confidence: float = Field(..., ge=0.0, le=1.0)
-    model_version:         str   = "spacy-med-ner-v1"
+    """Full output of the NLP extraction stage."""
 
+    source_text: str
+    entities: list[ClinicalEntity]
+    extraction_confidence: float = Field(..., ge=0.0, le=1.0)
+    model_version: str           = "spacy-med-ner-v1"
+
+
+# ── Pipeline request / response ───────────────────────────────────────────────
 
 class PipelineRequest(BaseModel):
-    text:          str           = Field(..., min_length=10, max_length=50_000)
-    patient_id:    str           = Field(..., description="External patient reference")
-    source_system: str           = Field(default="UNKNOWN")
-    encounter_id:  Optional[str] = None
-
-
-class ClinicalReasoningSummary(BaseModel):
-    """Subset of ClinicalReasoning safe to expose in API response."""
-    summary:          str
-    urgent_flags:     list[str]
-    differentials:    list[str]
-    overall_severity: str
-    confidence:       float
+    text: str          = Field(..., min_length=10, max_length=50_000)
+    patient_id: str    = Field(..., description="External patient reference")
+    source_system: str = Field(default="UNKNOWN")
+    encounter_id: Optional[str] = None
 
 
 class PipelineResponse(BaseModel):
-    request_id:          str
-    patient_id:          str
-    fhir_bundle:         dict
-    entity_count:        int
+    request_id: str
+    patient_id: str
+    fhir_bundle: dict          # validated FHIR R4 Bundle JSON
+    entity_count: int
     pipeline_confidence: float
-    audit_id:            str
-    reasoning:           Optional[ClinicalReasoningSummary] = None
+    audit_id: str
